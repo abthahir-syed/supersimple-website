@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Case Details</title>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+<style>
+body {
+    background:#f4f6f9;
+}
+
+.card {
+    border-radius:12px;
+    border:none;
+    box-shadow:0 2px 10px rgba(0,0,0,0.05);
+}
+
+.section-title {
+    font-weight:600;
+    color:#0d6efd;
+    margin-bottom:10px;
+}
+
+.badge-status {
+    font-size:12px;
+    padding:6px 10px;
+}
+
+</style>
+
+</head>
+
+<body class="p-4">
+
+<div class="container">
+
+<h4 class="mb-3 text-primary">📄 Case Details</h4>
+
+<!-- 🔹 CUSTOMER INFO -->
+<div class="card p-3 mb-3">
+<div class="section-title"> Customer Info</div>
+
+<div class="row">
+<div class="col-md-6">
+<p><b>Name:</b> {{ case['client_name'] }}</p>
+<p><b>Case No:</b> {{ case['case_number'] }}</p>
+<p><b>Ref No:</b> {{ case['ref_no'] }}</p>
+</div>
+
+<div class="col-md-6">
+<p><b>Portal:</b> {{ case['portal_type'] }}</p>
+<p>
+<b>Status:</b>
+<span class="badge badge-status
+{% if case['status']=='Completed' %}bg-success
+{% elif case['status']=='Pending' %}bg-warning text-dark
+{% elif case['status']=='In Progress' %}bg-info text-dark
+{% else %}bg-secondary{% endif %}">
+{{ case['status'] }}
+</span>
+</p>
+
+<p><b>Priority:</b> 
+<span class="badge bg-danger">{{ case['priority'] }}</span>
+</p>
+
+<p><b>Agent:</b> {{ case['assigned_agent'] }}</p>
+</div>
+</div>
+</div>
+
+<!-- 🔹 ADDRESS -->
+<div class="card p-3 mb-3">
+<div class="section-title">  Address</div>
+
+<p>
+{{ case['address'] or '-' }}, 
+{{ case['city'] or '-' }},
+{{ case['state'] or '-' }},
+{{ case['pincode'] or '-' }}
+</p>
+</div>
+
+<!-- 🔹 VERIFICATION -->
+<div class="card p-3 mb-3">
+<div class="section-title">  Verification Details</div>
+
+<div class="row">
+<div class="col-md-6">
+<p><b>Residence:</b> {{ case['residence'] or '-' }}</p>
+<p><b>Family:</b> {{ case['family'] or '-' }}</p>
+</div>
+
+<div class="col-md-6">
+<p><b>Verification:</b> {{ case['verification'] or '-' }}</p>
+<p><b>Final:</b> {{ case['final_status'] or '-' }}</p>
+</div>
+</div>
+</div>
+
+<!-- 🔹 PHOTO -->
+<div class="card p-3 mb-3">
+<div class="section-title">  Proof Photo</div>
+
+{% if case['photo1'] %}
+<img src="/{{ case['photo1'] }}" width="200" class="mb-2 rounded">
+{% else %}
+<p class="text-muted">No Photo Uploaded</p>
+{% endif %}
+
+<p><b>Feedback:</b> {{ case['feedback'] or '-' }}</p>
+</div>
+
+<!-- 🔹 MAP -->
+<div class="card p-3 mb-3">
+<div class="section-title">📍 Location</div>
+
+<div id="map" style="height:400px;"></div>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+<script>
+var lat = parseFloat("{{ case['latitude'] or 0 }}");
+var lng = parseFloat("{{ case['longitude'] or 0 }}");
+
+if(lat && lng){
+    var map = L.map('map').setView([lat, lng], 13);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+    L.marker([lat, lng]).addTo(map)
+    .bindPopup("Customer Location")
+    .openPopup();
+}else{
+    document.getElementById("map").innerHTML = 
+    "<p class='text-muted text-center mt-3'>Location not available</p>";
+}
+</script>
+</div>
+
+<!-- 🔹 TIMELINE -->
+<div class="card p-3 mb-3">
+<div class="section-title">  Case Timeline</div>
+
+<ul class="list-group">
+
+{% for log in logs %}
+<li class="list-group-item">
+    <b>{{ log[2] }}</b><br>
+    <small class="text-muted">{{ log[3] }}</small>
+</li>
+{% else %}
+<li class="list-group-item text-muted text-center">
+    No updates yet
+</li>
+{% endfor %}
+
+</ul>
+</div>
+
+<!-- 🔹 ACTION BUTTONS -->
+<div class="d-flex justify-content-between">
+
+<a href="{{ url_for('muthoot_cases') }}" class="btn btn-secondary">
+⬅  Back
+</a>
+
+<a href="{{ url_for('download_report') }}" class="btn btn-success">
+  Download Report
+</a>
+
+</div>
+
+</div>
+
+</body>
+</html>

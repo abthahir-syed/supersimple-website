@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Edit Case</title>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+<style>
+body {
+    background: #f4f6f9;
+}
+
+.card {
+    border-radius: 12px;
+    border: none;
+}
+
+.section-title {
+    font-weight: bold;
+    color: #0d6efd;
+    margin-bottom: 10px;
+}
+
+</style>
+
+</head>
+
+<body class="p-4">
+
+<div class="container">
+
+<div class="card shadow p-4">
+
+<h4 class="mb-3 text-primary"> Edit Case</h4>
+
+<form method="POST">
+
+<!-- 🔹 BASIC -->
+<div class="section-title">Basic Info</div>
+
+<div class="row">
+
+<div class="col-md-6 mb-2">
+<label>Client Name</label>
+<input type="text" name="client_name"
+       value="{{ case['client_name'] }}"
+       class="form-control" required>
+</div>
+
+<div class="col-md-6 mb-2">
+<label>Case Number</label>
+<input type="text"
+       value="{{ case['case_number'] }}"
+       class="form-control" readonly>
+</div>
+
+</div>
+
+<!-- 🔹 STATUS -->
+<div class="section-title mt-3">Status Update</div>
+
+<div class="row">
+
+<div class="col-md-6 mb-2">
+<label>Status</label>
+<select name="status" class="form-control">
+
+<option value="Pending"
+{% if case['status']=='Pending' %}selected{% endif %}>
+Pending
+</option>
+
+<option value="In Progress"
+{% if case['status']=='In Progress' %}selected{% endif %}>
+In Progress
+</option>
+
+<option value="Completed"
+{% if case['status']=='Completed' %}selected{% endif %}>
+Completed
+</option>
+
+<option value="Rejected"
+{% if case['status']=='Rejected' %}selected{% endif %}>
+Rejected
+</option>
+
+</select>
+</div>
+
+<div class="col-md-6 mb-2">
+<label>Priority</label>
+<select name="priority" class="form-control">
+
+<option value="Low"
+{% if case['priority']=='Low' %}selected{% endif %}>
+Low
+</option>
+
+<option value="Medium"
+{% if case['priority']=='Medium' %}selected{% endif %}>
+Medium
+</option>
+
+<option value="High"
+{% if case['priority']=='High' %}selected{% endif %}>
+High
+</option>
+
+</select>
+</div>
+
+</div>
+
+<!-- 🔹 FEEDBACK -->
+<div class="section-title mt-3">Remarks</div>
+
+<textarea name="feedback" class="form-control mb-3"
+placeholder="Enter remarks...">{{ case['feedback'] or '' }}</textarea>
+
+<!-- 🔹 ACTION -->
+<div class="d-flex justify-content-end gap-2">
+
+<a href="{{ url_for('view_case') }}" class="btn btn-secondary">
+Cancel
+</a>
+
+<button class="btn btn-success">
+✔️ Update Case
+</button>
+
+</div>
+
+</form>
+
+</div>
+
+</div>
+
+</body>
+</html>

@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>CPV Dashboard</title>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+.btn-sm {
+    border-radius: 20px;
+    padding: 6px 14px;
+    font-weight: 500;
+}
+</style>
+
+<style>
+
+/* 🔥 Smooth UI */
+body, html {
+    margin: 0;
+    padding: 0;
+    font-family: 'Poppins', sans-serif;
+    background: #f4f6f9;
+    animation: fadeIn 0.5s ease;
+}
+
+canvas {
+    max-height: 220px !important;
+}
+
+/* Navbar fix (gap remove) */
+.navbar {
+    margin-bottom: 0 !important;
+    padding: 6px 12px;
+}
+
+/* Container fix (top space remove) */
+.container {
+    margin-top: 5px !important;
+}
+
+/* Cards */
+.card {
+    border-radius: 16px;
+    padding: 10px;
+    font-size: 13px;
+    backdrop-filter: blur(8px);
+    background: rgba(255,255,255,0.85);
+    box-shadow: 0 3px 15px rgba(0,0,0,0.08);
+    transition: 0.25s ease;
+}
+
+.card:hover {
+    transform: translateY(-4px) scale(1.02);
+}
+
+/* Sidebar */
+.sidebar {
+    width: 230px;
+    min-height: 100vh;
+    background: linear-gradient(180deg,#141e30,#243b55);
+}
+
+/* Sidebar links */
+.sidebar-link {
+    padding: 10px;
+    border-radius: 10px;
+    margin-bottom: 5px;
+    transition: 0.2s;
+}
+
+.sidebar-link:hover {
+    background: rgba(255,255,255,0.1);
+    transform: translateX(4px);
+}
+
+/* Gradient cards */
+.gradient-blue {background: linear-gradient(135deg,#667eea,#764ba2); color:white;}
+.gradient-green {background: linear-gradient(135deg,#00b09b,#96c93d); color:white;}
+.gradient-orange {background: linear-gradient(135deg,#f7971e,#ffd200); color:black;}
+.gradient-cyan {background: linear-gradient(135deg,#36d1dc,#5b86e5); color:white;}
+
+/* Table */
+.table {
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.table thead {
+    background: #111;
+    color: white;
+}
+
+.table tbody tr:hover {
+    background: #f2f2f2;
+    transition: 0.2s;
+}
+
+/* Buttons */
+.btn {
+    border-radius: 8px;
+    transition: 0.2s;
+}
+
+.btn:hover {
+    transform: scale(1.03);
+}
+
+body {
+    background: #eef2f7;
+}
+
+.sidebar {
+    background: linear-gradient(180deg, #0f2027, #203a43, #2c5364);
+}
+
+.navbar {
+    border-bottom: 1px solid #ddd;
+}
+
+.card {
+    border: none;
+    border-radius: 14px;
+}
+
+h5, h6 {
+    font-weight: 600;
+}
+
+/* Animation */
+@keyframes fadeIn {
+    from {opacity:0;}
+    to {opacity:1;}
+}
+
+/* Welcome popup */
+#welcomePopup {
+    position: fixed;
+    top: 15px;
+    right: 15px;
+    z-index: 999;
+}
+
+small {
+    font-size: 12px;
+}
+
+.btn-sm {
+    font-size: 12px;
+}
+
+/* 🔵 IN PROGRESS - pulse */
+.status-progress {
+    background: #0d6efd;
+    color: white;
+    animation: pulse 1.5s infinite;
+}
+
+/* 🟡 PENDING - blink */
+.status-pending {
+    background: orange;
+    color: white;
+    animation: blink 1s infinite;
+}
+
+/* 🟢 COMPLETED - glow */
+.status-completed {
+    background: green;
+    color: white;
+    box-shadow: 0 0 10px rgba(0,255,0,0.7);
+}
+
+/* 🔴 REJECTED - shake */
+.status-rejected {
+    background: red;
+    color: white;
+    animation: shake 0.5s infinite;
+}
+
+.badge:hover {
+    transform: scale(1.2);
+    transition: 0.3s;
+}
+
+.status-completed { background:#198754; color:white; }
+.status-pending { background:#ffc107; color:black; }
+.status-progress { background:#0d6efd; color:white; }
+.status-rejected { background:#dc3545; color:white; }
+
+/* 🔥 ANIMATIONS */
+@keyframes blink {
+    0% { opacity: 1; }
+    50% { opacity: 0.3; }
+    100% { opacity: 1; }
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.08); }
+    100% { transform: scale(1); }
+}
+
+@keyframes shake {
+    0% { transform: translateX(0); }
+    25% { transform: translateX(-2px); }
+    50% { transform: translateX(2px); }
+    75% { transform: translateX(-2px); }
+    100% { transform: translateX(0); }
+}
+
+</style>
+</head>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+var ctx = document.getElementById('monthlyChart');
+
+new Chart(ctx, {
+    type: 'bar',
+    data: {
+        labels: {{ months|safe }},
+        datasets: [{
+            label: 'Cases',
+            data: {{ monthly_data|safe }}
+        }]
+    }
+});
+</script>
+
+<body>
+
+<div class="d-flex">
+
+<!-- 🔥 SIDEBAR -->
+<div class="sidebar text-white p-3">
+
+<h4 class="text-center mb-4"> CPV Portal</h4>
+
+<ul class="nav flex-column">
+
+<!-- 🔹 MAIN -->
+<li><a class="nav-link text-white sidebar-link" href="{{ url_for('dashboard') }}">📊 Dashboard</a></li>
+
+<li><a class="nav-link text-white sidebar-link" href="{{ url_for('upload_cases') }}"> Upload Excel</a></li>
+
+<li><a class="nav-link text-white sidebar-link" href="{{ url_for('add_case') }}"> Add Case</a></li>
+
+<li><a class="nav-link text-white sidebar-link" href="{{ url_for('view_case') }}"> View Cases</a></li>
+
+<li>
+<a class="nav-link text-white sidebar-link" href="{{ url_for('hdfc_dashboard') }}">
+    HDFC Dashboard
+</a>
+</li>
+
+<li>
+<a class="nav-link text-white sidebar-link" href="/attendance">
+  Attendance
+</a>
+</li>
+
+<hr class="bg-light">
+
+<!-- 🔹 CLIENT BASED -->
+<li><a class="nav-link text-white sidebar-link" href="{{ url_for('hdfc_cases') }}"> HDFC Cases</a></li>
+
+<li><a class="nav-link text-white sidebar-link" href="{{ url_for('muthoot_cases') }}"> Muthoot Cases</a></li>
+
+<hr class="bg-light">
+
+<!-- 🔹 REPORTS -->
+<li><a class="nav-link text-white sidebar-link" href="{{ url_for('download_hdfc_report') }}"> HDFC Report</a></li>
+
+<li><a class="nav-link text-white sidebar-link" href="{{ url_for('download_muthoot_report') }}"> Muthoot Report</a></li>
+
+<li><a class="nav-link text-white sidebar-link" href="{{ url_for('download_report') }}">⬇ All Reports</a></li>
+
+<hr class="bg-light">
+
+<!-- 🔹 TRACKING -->
+<li><a class="nav-link text-white sidebar-link" href="/map">🗺 Map View</a></li>
+
+<li><a class="nav-link text-white sidebar-link" href="/live_map">📍 Live Tracking</a></li>
+
+<hr class="bg-light">
+
+<!-- 🔹 LOGOUT -->
+<li class="mt-3">
+<a class="btn btn-danger w-100" href="{{ url_for('logout') }}">Logout</a>
+</li>
+
+</ul>
+
+</div>
+
+<!-- MAIN -->
+<div class="flex-grow-1">
+
+<!-- 🔝 NAVBAR -->
+<nav class="navbar bg-white shadow-sm px-3 d-flex justify-content-between">
+
+    <!-- LEFT -->
+    <div>
+        <h5 class="mb-0 fw-bold text-primary">🏦 CPV Verification Portal</h5>
+        <small class="text-muted">Case Management System</small>
+    </div>
+
+    <!-- RIGHT -->
+    <div class="d-flex align-items-center gap-2">
+
+        <span class="fw-semibold text-dark">
+            👤 {{ session['user'] }}
+        </span>
+
+        <a href="{{ url_for('profile') }}" class="btn btn-sm btn-outline-primary">
+            Profile
+        </a>
+
+        <!-- 🔔 Notifications -->
+        <div class="dropdown">
+            <button class="btn btn-sm btn-light position-relative" data-bs-toggle="dropdown">
+                🔔
+                <span class="badge bg-danger position-absolute top-0 start-100 translate-middle">
+                    {{ notifications|length }}
+                </span>
+            </button>
+
+            <ul class="dropdown-menu dropdown-menu-end shadow">
+                {% for note in notifications %}
+                <li class="dropdown-item">🔔 {{ note[0] }}</li>
+                {% endfor %}
+
+                {% if notifications|length == 0 %}
+                <li class="dropdown-item text-muted">No notifications</li>
+                {% endif %}
+            </ul>
+        </div>
+
+        <!-- 🌙 Dark Mode -->
+        <button onclick="toggleDarkMode()" class="btn btn-sm btn-dark">🌙</button>
+
+    </div>
+
+</nav>
+
+<!-- 📍 PAGE TITLE + FILTER -->
+<div class="container-fluid mt-2">
+
+    <div class="d-flex justify-content-between align-items-center">
+
+        <h6 class="fw-bold">Dashboard</h6>
+
+        <!-- 🔥 PORTAL FILTER -->
+        <div class="d-flex gap-1">
+
+            <a href="/dashboard" class="btn btn-secondary btn-sm">All</a>
+
+            <a href="/dashboard?portal=HDFC" 
+               class="btn btn-primary btn-sm {% if portal_filter=='HDFC' %}active{% endif %}">
+               HDFC
+            </a>
+
+            <a href="/dashboard?portal=MUTHOOT" 
+               class="btn btn-success btn-sm {% if portal_filter=='MUTHOOT' %}active{% endif %}">
+               Muthoot
+            </a>
+
+</div>
+
+<div class="dropdown">
+<button class="btn btn-sm btn-light position-relative" data-bs-toggle="dropdown">
+🔔
+<span class="badge bg-danger position-absolute top-0 start-100 translate-middle">
+{{ notifications|length }}
+</span>
+</button>
+
+<ul class="dropdown-menu dropdown-menu-end shadow">
+
+{% if notifications %}
+    {% for note in notifications %}
+        <li class="dropdown-item">🔔 {{ note[0] }}</li>
+    {% endfor %}
+{% else %}
+    <li class="dropdown-item text-muted">No notifications</li>
+{% endif %}
+
+</ul>
+</div>
+
+</div>
+</nav>
+
+<div class="container-fluid px-3 mt-2">
+
+<!-- 🔥 TOP CARDS (UPDATED UI) -->
+<div class="row mt-3 text-center">
+
+<div class="col-md-3">
+<div class="card p-3 shadow-sm text-center border-0">
+<h6 class="text-muted">Total Cases</h6>
+<h3 class="fw-bold text-dark">{{ total_cases }}</h3>
+</div>
+</div>
+
+<div class="col-md-3">
+<div class="card p-3 shadow-sm text-center border-0">
+<h6 class="text-muted">Completed</h6>
+<h3 class="fw-bold text-success">{{ completed_cases }}</h3>
+</div>
+</div>
+
+<div class="col-md-3">
+<div class="card p-3 shadow-sm text-center border-0">
+<h6 class="text-muted">Pending</h6>
+<h3 class="fw-bold text-warning">{{ pending_cases }}</h3>
+</div>
+</div>
+
+<div class="col-md-3">
+<div class="card p-3 shadow-sm text-center border-0">
+<h6 class="text-muted">In Progress</h6>
+<h3 class="fw-bold text-primary">{{ progress_cases }}</h3>
+</div>
+</div>
+
+</div>
+
+<!-- TODAY -->
+<div class="row g-2 mt-2">
+
+<div class="col-md-6">
+<div class="card p-2 text-center">
+<small>Today</small>
+<div class="d-flex justify-content-around">
+<span>Total: {{ today_total }}</span>
+<span>Done: {{ today_completed }}</span>
+<span>Pending: {{ today_pending }}</span>
+</div>
+</div>
+</div>
+
+<div class="col-md-6">
+<div class="card p-2 text-center">
+<small>Target</small>
+<div class="progress mt-1" style="height:10px;">
+<div class="progress-bar bg-success"
+style="width: {{ achievement_percent }}%">
+</div>
+</div>
+<small>{{ achievement_percent }}%</small>
+</div>
+</div>
+
+</div>
+
+<div class="row text-center mt-1">
+
+<div class="col-md-6">
+<div class="card bg-primary text-white">
+HDFC Cases<br><b>{{ hdfc_count }}</b>
+</div>
+</div>
+
+<div class="col-md-6">
+<div class="card bg-dark text-white">
+MUTHOOT Cases<br><b>{{ muthoot_count }}</b>
+</div>
+</div>
+
+</div>
+
+<!-- 🎯 TARGET -->
+<div class="card mt-3 text-center">
+Target: {{ target }} | Done: {{ achieved }}
+
+<div class="progress mt-2" style="height:15px;">
+<div class="progress-bar bg-success" style="width: {{ achievement_percent }}%">
+{{ achievement_percent }}%
+</div>
+</div>
+</div>
+
+<!-- 📊 CHARTS -->
+<div class="row g-2 mt-2">
+
+<div class="col-md-6">
+<div class="card p-2">
+<small>Status</small>
+<canvas id="statusChart"></canvas>
+</div>
+</div>
+
+<div class="col-md-6">
+<div class="card p-3">
+<h6 class="text-center"> Monthly Cases</h6>
+<canvas id="monthlyChart"></canvas>
+
+</div>
+</div>
+
+</div>
+
+{% if role == "admin" %}
+
+<div class="mt-2">
+<h6>Agent Performance</h6>
+<canvas id="agentChart"></canvas>
+</div>
+
+<div class="card mt-3">
+<h6>Agent Table</h6>
+
+<table class="table table-bordered text-center table-sm">
+<tr><th>Agent</th><th>Total</th></tr>
+
+{% for agent in agent_data %}
+<tr>
+<td>{{ agent[0] }}</td>
+<td>{{ agent[1] }}</td>
+</tr>
+{% endfor %}
+</table>
+</div>
+
+{% endif %}
+
+<div class="card p-3 mb-3">
+
+<h6>Search by Reference No</h6>
+
+<form method="GET" action="/search_case" class="d-flex">
+    <input type="text" name="ref_no" class="form-control me-2" placeholder="Enter Reference No" required>
+    <button class="btn btn-primary">Search</button>
+</form>
+
+</div>
+
+<div class="card p-3 mt-2">
+<h6> Mark Attendance</h6>
+
+<form method="POST" action="/mark_attendance" class="d-flex gap-2">
+
+<input name="agent" class="form-control" placeholder="Agent Name" required>
+
+<select name="status" class="form-control">
+<option value="Present"> Present</option>
+<option value="Absent"> Absent</option>
+</select>
+
+<button class="btn btn-success">Submit</button>
+
+</form>
+</div>
+
+<!-- 🔵 RECENT HDFC CASES -->
+<div class="card mt-3 shadow-sm">
+<h6 class="text-primary fw-bold">🏦 Recent HDFC Cases</h6>
+
+<div class="table-responsive">
+<table class="table table-bordered table-hover table-sm text-center align-middle">
+
+<tr class="table-light">
+<th>ID</th>
+<th>Ref No</th>
+<th>Client</th>
+<th>CPV</th>
+<th>Status</th>
+<th>Priority</th>
+<th>Date</th>
+<th>Agent</th>
+<th>Action</th>
+</tr>
+
+{% for case in recent_hdfc %}
+<tr>
+
+<td>{{ case['id'] }}</td>
+<td>{{ case['ref_no'] }}</td>
+<td>{{ case['client_name'] }}</td>
+<td>{{ case['cpv_type'] }}</td>
+
+<td>
+{% if case['status'] == "Completed" %}
+<span class="badge bg-success">✔ Completed</span>
+{% elif case['status'] == "Pending" %}
+<span class="badge bg-warning text-dark">⏳ Pending</span>
+{% elif case['status'] == "In Progress" %}
+<span class="badge bg-info text-dark">🔄 Progress</span>
+{% else %}
+<span class="badge bg-secondary">N/A</span>
+{% endif %}
+</td>
+
+<td>
+<span class="badge bg-danger">{{ case['priority'] }}</span>
+</td>
+
+<td>{{ case['initiation_date'] }}</td>
+<td>{{ case['assigned_agent'] }}</td>
+
+<td>
+<div class="d-flex justify-content-center gap-1">
+
+<a href="{{ url_for('update_case', case_id=case['id']) }}" 
+   class="btn btn-sm btn-outline-success">
+     Update
+</a>
+
+<a href="{{ url_for('hdfc_form', case_id=case['id']) }}" 
+   class="btn btn-sm btn-outline-primary">
+     Open
+</a>
+
+{% if case['status'] != "Completed" %}
+<button onclick="markDone({{ case['id'] }})"
+        class="btn btn-sm btn-success">
+    ✔ Done
+</button>
+{% endif %}
+
+</div>
+</td>
+
+</tr>
+{% endfor %}
+
+{% if recent_hdfc|length == 0 %}
+<tr><td colspan="9">No HDFC data</td></tr>
+{% endif %}
+
+</table>
+</div>
+</div>
+
+<!-- 🟢 RECENT MUTHOOT CASES -->
+<div class="card mt-3 shadow-sm">
+<h6 class="text-success fw-bold">🏦 Recent Muthoot Cases</h6>
+
+<div class="table-responsive">
+<table class="table table-bordered table-hover table-sm text-center align-middle">
+
+<tr class="table-light">
+<th>ID</th>
+<th>Case No</th>
+<th>Customer</th>
+<th>Pincode</th>
+<th>Status</th>
+<th>Priority</th>
+<th>Agent</th>
+<th>Action</th>
+</tr>
+
+{% for c in recent_muthoot %}
+<tr>
+
+<td>{{ c['id'] }}</td>
+<td>{{ c['case_number'] }}</td>
+<td>{{ c['client_name'] }}</td>
+<td>{{ c['pincode'] }}</td>
+
+<td>
+{% if c['status'] == "Completed" %}
+<span class="badge bg-success">✔ Completed</span>
+{% elif c['status'] == "Pending" %}
+<span class="badge bg-warning text-dark">⏳ Pending</span>
+{% elif c['status'] == "In Progress" %}
+<span class="badge bg-info text-dark">🔄 Progress</span>
+{% else %}
+<span class="badge bg-secondary">N/A</span>
+{% endif %}
+
+</td>
+
+<td>
+<span class="badge bg-danger">{{ c['priority'] }}</span>
+</td>
+
+<td>{{ c['assigned_agent'] }}</td>
+
+<td>
+<div class="d-flex justify-content-center gap-1">
+
+{% if c['status'] == "Completed" %}
+<span class="badge bg-success p-2">✔ Done</span>
+{% else %}
+<a href="{{ url_for('muthoot_form', case_id=c['id']) }}" 
+   class="btn btn-sm btn-outline-success">
+   ✔ Verify
+</a>
+{% endif %}
+
+<a href="{{ url_for('view_case_detail', case_id=c['id']) }}" 
+   class="btn btn-sm btn-outline-primary">
+   👁 View
+</a>
+
+</div>
+</td>
+
+</tr>
+{% endfor %}
+
+{% if recent_muthoot|length == 0 %}
+<tr><td colspan="8">No Muthoot data</td></tr>
+{% endif %}
+
+</table>
+</div>
+</div>
+
+<!-- 🔗 NAV BUTTONS -->
+<div class="text-center mt-3">
+<a href="/hdfc_cases" class="btn btn-primary">View HDFC</a>
+<a href="/muthoot_cases" class="btn btn-success">View Muthoot</a>
+</div>
+
+
+<!-- 🎉 WELCOME -->
+<div id="welcomePopup" class="alert alert-success text-center shadow">
+🎉 Welcome {{ session['username'] }}
+</div>
+
+<script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
+
+<script>
+
+// ================= SOCKET LIVE UPDATE =================
+var socket = io();
+
+socket.on('update_dashboard', function(data){
+    document.getElementById("total_cases").innerText = data.total;
+    document.getElementById("completed_cases").innerText = data.completed;
+    document.getElementById("pending_cases").innerText = data.pending;
+});
+
+
+// ================= WELCOME POPUP =================
+setTimeout(() => {
+    let popup = document.getElementById("welcomePopup");
+    if (popup){
+        popup.style.display = "none";
+    }
+}, 3000);
+
+
+// ================= CHARTS =================
+new Chart(document.getElementById("statusChart"), {
+    type:"doughnut",
+    data:{
+        labels:["Completed","Pending","Progress"],
+        datasets:[{
+            data:[{{ completed_cases }},{{ pending_cases }},{{ progress_cases }}]
+        }]
+    },
+    options:{animation:{animateScale:true,animateRotate:true}}
+});
+
+new Chart(document.getElementById("monthlyChart"), {
+    type:"line",
+    data:{
+        labels:[{% for m in monthly_data %}"{{ m[0] }}",{% endfor %}],
+        datasets:[{
+            data:[{% for m in monthly_data %}{{ m[1] }},{% endfor %}]
+        }]
+    }
+});
+
+{% if role=="admin" %}
+new Chart(document.getElementById("agentChart"), {
+    type:"bar",
+    data:{
+        labels:[{% for a in agent_data %}"{{ a[0] }}",{% endfor %}],
+        datasets:[{
+            data:[{% for a in agent_data %}{{ a[1] }},{% endfor %}]
+        }]
+    }
+});
+{% endif %}
+
+
+// ================= DARK MODE =================
+function toggleDarkMode(){
+    document.body.classList.toggle("dark-mode");
+    localStorage.setItem("darkMode", document.body.classList.contains("dark-mode"));
+}
+
+window.onload = function(){
+    if(localStorage.getItem("darkMode") === "true"){
+        document.body.classList.add("dark-mode");
+    }
+}
+
+
+// ================= LOCATION TRACKING =================
+function sendLocation(){
+
+    navigator.geolocation.getCurrentPosition(function(position){
+
+        fetch("/update_location", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                lat: position.coords.latitude,
+                lng: position.coords.longitude
+            })
+        });
+
+    });
+}
+
+// 🔁 every 5 sec
+setInterval(sendLocation, 5000);
+
+
+// ================= 🔍 SEARCH ENTER FIX =================
+document.addEventListener("DOMContentLoaded", function() {
+
+    let input = document.querySelector("input[name='ref_no']");
+
+    if (input) {
+        input.addEventListener("keypress", function(e) {
+            if (e.key === "Enter") {
+                this.form.submit();
+            }
+        });
+    }
+
+});
+
+</script>
+
+<script>
+function markDone(id){
+
+fetch("/mark_completed/" + id)
+.then(() => {
+    alert("✅ Completed");
+
+    // 🔥 remove row instantly (no reload)
+    let row = document.getElementById("row-" + id);
+    if(row){
+        row.remove();
+    }
+});
+
+}
+</script>
+
+<footer class="text-center mt-4 text-muted">
+<small>© 2026 CPV Portal | Internal System</small>
+</footer>
+
+</body>
+</html>

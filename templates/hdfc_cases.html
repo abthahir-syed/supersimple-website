@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>HDFC Cases</title>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+<style>
+body {
+    background:#f4f6f9;
+}
+
+.card {
+    border-radius: 12px;
+}
+
+.table {
+    background:white;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.search-box {
+    max-width: 250px;
+}
+
+.ref-search {
+    max-width: 300px;
+}
+
+a.case-link {
+    color: #0d6efd;
+    font-weight: bold;
+    text-decoration: none;
+}
+
+a.case-link:hover {
+    text-decoration: underline;
+}
+</style>
+
+</head>
+
+<body class="p-4">
+
+<div class="container">
+
+<div class="card shadow p-3">
+
+<!-- 🔹 HEADER -->
+<div class="d-flex justify-content-between align-items-center mb-3">
+
+<h4 class="text-primary">🏦 HDFC Cases</h4>
+
+<!-- 🔍 CLIENT SEARCH -->
+<input type="text" id="searchInput" class="form-control search-box" placeholder="Search client...">
+
+</div>
+
+<!-- 🔥 REF NO SEARCH (REAL HDFC STYLE) -->
+<form method="GET" action="/search_case" class="d-flex mb-3">
+    <input type="text" name="ref_no" class="form-control ref-search me-2" placeholder="Enter Reference No" required>
+    <button class="btn btn-primary">Search</button>
+</form>
+
+<!-- 🔥 TABLE -->
+<table class="table table-hover text-center align-middle" id="casesTable">
+
+<thead class="table-dark">
+<tr>
+<th>Case ID</th>
+<th>Ref No</th>
+<th>Client</th>
+<th>CPV Type</th>
+<th>Status</th>
+<th>Priority</th>
+<th>Agent</th>
+<th>Date</th>
+<th>Action</th>
+</tr>
+</thead>
+
+<tbody>
+
+{% for c in cases %}
+<tr>
+
+<!-- 🔥 CLICKABLE CASE ID -->
+<td>
+<a href="/case/{{ c['id'] }}" class="case-link">
+{{ c["id"] }}
+</a>
+</td>
+
+<td>{{ c["ref_no"] }}</td>
+
+<td>{{ c["client_name"] }}</td>
+
+<td>{{ c["cpv_type"] or "-" }}</td>
+
+<td>
+<span class="badge 
+{% if c["status"]=='Completed' %}bg-success
+{% elif c["status"]=='Pending' %}bg-warning text-dark
+{% elif c["status"]=='In Progress' %}bg-primary
+{% elif c["status"]=='Rejected' %}bg-danger
+{% else %}bg-secondary{% endif %}">
+{{ c["status"] or "N/A" }}
+</span>
+</td>
+
+<td>{{ c["priority"] or "-" }}</td>
+
+<td>{{ c["assigned_agent"] or "-" }}</td>
+
+<td>{{ c["initiation_date"] or "-" }}</td>
+
+<td>
+<a href="/case/{{ c['id'] }}" class="btn btn-sm btn-primary">Open</a>
+<a href="/hdfc_form/{{ c['id'] }}" class="btn btn-primary btn-sm">
+Verify
+</a>
+</td>
+
+</tr>
+
+{% else %}
+<tr>
+<td colspan="9" class="text-muted">No HDFC cases found</td>
+</tr>
+{% endfor %}
+
+</tbody>
+
+</table>
+
+</div>
+</div>
+
+<!-- 🔍 CLIENT SEARCH SCRIPT -->
+<script>
+document.getElementById("searchInput").addEventListener("keyup", function() {
+    let value = this.value.toLowerCase();
+    let rows = document.querySelectorAll("#casesTable tbody tr");
+
+    rows.forEach(row => {
+        let text = row.innerText.toLowerCase();
+        row.style.display = text.includes(value) ? "" : "none";
+    });
+});
+</script>
+
+</body>
+</html>

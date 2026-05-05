@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Muthoot Verification Form</title>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+<style>
+body { background:#f4f6f9; }
+.card {
+    border-radius:12px;
+    box-shadow:0 2px 10px rgba(0,0,0,0.1);
+}
+.preview-img {
+    width:80px;
+    height:80px;
+    object-fit:cover;
+    margin:5px;
+    border-radius:8px;
+    border:1px solid #ccc;
+}
+</style>
+
+</head>
+<body>
+
+<div class="container mt-4">
+
+<h3 class="text-center mb-4 text-success">
+🏦 {{ case['portal_type'] }} Verification
+</h3>
+
+<form method="POST" enctype="multipart/form-data">
+
+<input type="hidden" name="portal_type" value="MUTHOOT">
+
+<!-- 🔥 CUSTOMER DETAILS -->
+<div class="card p-3 mb-3">
+<h5>📄 Customer Details</h5>
+
+<input class="form-control mb-2"
+       value="{{ case['application_no'] }}"
+       readonly placeholder="Application No">
+
+<input class="form-control mb-2"
+       value="{{ case['client_name'] }}"
+       readonly placeholder="Customer Name">
+
+<input class="form-control mb-2"
+       value="{{ case['address'] }}"
+       readonly placeholder="Address">
+
+<div class="row">
+<div class="col-md-6">
+<input class="form-control"
+       value="{{ case['city'] }}"
+       readonly placeholder="City">
+</div>
+
+<div class="col-md-6">
+<input class="form-control"
+       value="{{ case['pincode'] }}"
+       readonly placeholder="Pincode">
+</div>
+</div>
+
+</div>
+
+<!-- 🏠 RESIDENCE DETAILS -->
+<div class="card p-3 mb-3">
+<h5>🏠 Residence Details</h5>
+
+<select name="residence_type" class="form-control mb-2">
+<option>Apartment</option>
+<option>Individual House</option>
+<option>Row House</option>
+<option>Not Applicable</option>
+</select>
+
+<select name="locality" class="form-control mb-2">
+<option>Lower</option>
+<option>Middle</option>
+<option>Posh</option>
+<option>Not Applicable</option>
+</select>
+
+<select name="accessibility" class="form-control mb-2">
+<option>Easy to Locate</option>
+<option>Difficult to Locate</option>
+<option>Not Applicable</option>
+</select>
+
+<select name="person_met" class="form-control mb-2">
+<option>Yes</option>
+<option>No</option>
+<option>Not Applicable</option>
+</select>
+
+<select name="years_at_residence" class="form-control mb-2">
+<option>Less than 1 Year</option>
+<option>1-3 Years</option>
+<option>3-5 Years</option>
+<option>More than 5 Years</option>
+</select>
+
+<select name="ownership" class="form-control mb-2">
+<option>Owned</option>
+<option>Leased</option>
+<option>Govt Quarters</option>
+<option>Company Allotted</option>
+<option>Not Applicable</option>
+</select>
+
+</div>
+
+<!-- 👨‍👩‍👧 ADDITIONAL DETAILS -->
+<div class="card p-3 mb-3">
+<h5>👨‍👩‍👧 Additional Info</h5>
+
+<select name="family_status" class="form-control mb-2">
+<option>Joint</option>
+<option>Nuclear</option>
+<option>Not Applicable</option>
+</select>
+
+<select name="vehicle" class="form-control mb-2">
+<option>Yes</option>
+<option>No</option>
+</select>
+
+<select name="living_standard" class="form-control mb-2">
+<option>Low</option>
+<option>Medium</option>
+<option>High</option>
+</select>
+
+</div>
+
+<!-- ✔ VERIFICATION -->
+<div class="card p-3 mb-3">
+<h5>✔ Verification</h5>
+
+<select name="verification_status" class="form-control mb-2">
+<option>Verified</option>
+<option>Not Verified</option>
+</select>
+
+<select name="final_status" class="form-control mb-2">
+<option>Eligible</option>
+<option>Not Eligible</option>
+</select>
+
+<input type="date" name="visit_date" class="form-control mb-2">
+
+</div>
+
+<!-- 📄 DOCUMENT -->
+<div class="card p-3 mb-3">
+<h5>📄 Document Upload</h5>
+
+<input type="file" name="document_photo" class="form-control">
+
+</div>
+
+<!-- 📸 SITE PHOTOS -->
+<div class="card p-3 mb-3">
+<h5>📸 Site Photos</h5>
+
+<input type="file" name="photo1" class="form-control mb-2" onchange="previewImage(event)">
+<input type="file" name="photo2" class="form-control mb-2" onchange="previewImage(event)">
+<input type="file" name="photo3" class="form-control mb-2" onchange="previewImage(event)">
+
+<div id="preview"></div>
+
+</div>
+
+<!-- 📍 LOCATION -->
+<input type="hidden" name="lat" id="lat">
+<input type="hidden" name="lng" id="lng">
+
+<div class="text-center">
+<button class="btn btn-success w-100">Submit & Complete</button>
+</div>
+
+</form>
+
+</div>
+
+<!-- 📍 GPS -->
+<script>
+navigator.geolocation.getCurrentPosition(function(pos){
+    document.getElementById("lat").value = pos.coords.latitude;
+    document.getElementById("lng").value = pos.coords.longitude;
+});
+</script>
+
+<!-- 📸 PREVIEW -->
+<script>
+function previewImage(event){
+    let preview = document.getElementById("preview");
+
+    let img = document.createElement("img");
+    img.src = URL.createObjectURL(event.target.files[0]);
+    img.classList.add("preview-img");
+
+    preview.appendChild(img);
+}
+</script>
+
+</body>
+</html>

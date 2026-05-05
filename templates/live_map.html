@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Live Tracking</title>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+<!-- 🔥 ROUTE LIBRARY -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.css"/>
+<script src="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.js"></script>
+
+<style>
+#map { height: 500px; }
+</style>
+
+</head>
+<body>
+
+<h3>📍 Live Agent Tracking</h3>
+
+<div id="map"></div>
+
+<script>
+
+var map = L.map('map').setView([13.0827, 80.2707], 12);
+
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+var agentMarker = null;
+
+// ✅ LAST LOCATION STORE (IMPORTANT)
+let lastLat = null;
+let lastLng = null;
+
+
+// 🔥 SEND LOCATION (ONLY IF CHANGED)
+function sendLocation(lat, lng){
+
+    if(lat === lastLat && lng === lastLng){
+        return; // ❌ same location skip
+    }
+
+    lastLat = lat;
+    lastLng = lng;
+
+    console.log("📤 SENDING:", lat, lng);
+
+    fetch("/update_location", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            lat: lat,
+            lng: lng,
+            case_id: {{ case_id or 0 }}   // dynamic
+        })
+    })
+    .then(res => res.json())
+    .then(data => console.log("✅ UPDATED:", data))
+    .catch(err => console.log("❌ ERROR:", err));
+}
+
+
+// 🔥 GET CURRENT LOCATION
+function getAndSendLocation(){
+
+    if (navigator.geolocation){
+
+        navigator.geolocation.getCurrentPosition(function(position){
+
+            let lat = position.coords.latitude;
+            let lng = position.coords.longitude;
+
+            sendLocation(lat, lng); // ✅ optimized call
+
+        }, function(error){
+            console.log("⚠️ Location permission denied");
+        });
+
+    } else {
+        console.log("Geolocation not supported");
+    }
+}
+
+
+// 🔥 LOAD AGENT LOCATION (FROM DB)
+function loadAgent(){
+
+    fetch("/get_agent_location")
+    .then(res => res.json())
+    .then(data => {
+
+        if(data.lat && data.lng){
+
+            let newLatLng = [data.lat, data.lng];
+
+            if(agentMarker == null){
+
+                agentMarker = L.marker(newLatLng).addTo(map)
+                .bindPopup("🟢 Agent Live");
+
+            } else {
+
+                agentMarker.setLatLng(newLatLng);
+            }
+
+            map.panTo(newLatLng);
+        } else {
+            console.log("⚠️ No agent location data");
+        }
+    })
+    .catch(err => console.log("❌ LOAD ERROR:", err));
+}
+
+
+// 🔁 🔥 REDUCE LOAD (VERY IMPORTANT)
+
+// 👉 send location every 10 sec
+setInterval(getAndSendLocation, 10000);
+
+// 👉 fetch agent location every 10 sec
+setInterval(loadAgent, 10000);
+
+
+// 🔥 FIRST LOAD (ON PAGE OPEN)
+getAndSendLocation();
+loadAgent();
+
+</script>
+</body>
+</html>

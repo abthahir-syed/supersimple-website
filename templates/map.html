@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Live Agent Tracking</title>
+
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+
+    <style>
+        #map {
+            height: 500px;
+        }
+    </style>
+</head>
+<body>
+
+<h2>📍 Live Agent Tracking </h2>
+
+<select id="filter" class="form-select mb-2" style="width:200px;">
+    <option value="">All</option>
+    <option value="Completed">Completed</option>
+    <option value="Pending">Pending</option>
+</select>
+
+<div id="map"></div>
+
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+<script>
+
+// ✅ INIT MAP
+var map = L.map('map').setView([13.0827, 80.2707], 12); // Chennai
+
+// ✅ TILE
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap'
+}).addTo(map);
+
+// ✅ GLOBAL AGENT MARKER
+var agentMarker = null;
+
+// ✅ AGENT ICON (🔥 NEW)
+var agentIcon = L.icon({
+    iconUrl: "https://cdn-icons-png.flaticon.com/512/684/684908.png",
+    iconSize: [30, 30]
+});
+
+// ✅ MAIN FUNCTION
+function loadLocations(){
+
+    fetch("/get_locations")
+    .then(res => res.json())
+    .then(res => {
+
+        // 🔥 remove old markers (cases only)
+        map.eachLayer(function(layer){
+            if(layer instanceof L.Marker && layer !== agentMarker){
+                map.removeLayer(layer);
+            }
+        });
+
+        let filter = document.getElementById("filter").value;
+
+        res.data.forEach(loc => {
+
+            // ✅ FILTER
+            if(filter && loc.status !== filter){
+                return;
+            }
+
+            if(loc.assigned_agent && loc.latitude && loc.longitude){
+
+                let newLatLng = [
+                    parseFloat(loc.latitude),
+                    parseFloat(loc.longitude)
+                ];
+
+                if(agentMarker == null){
+
+                    agentMarker = L.marker(newLatLng, {icon: agentIcon})
+                    .addTo(map)
+                    .bindPopup("🟢 Agent Live: " + loc.assigned_agent);
+
+                } else {
+                    // 🔥 MOVE SMOOTHLY
+                    agentMarker.setLatLng(newLatLng);
+                }
+            }
+
+            if(loc.latitude && loc.longitude){
+
+                let icon;
+
+                if(loc.status === "Completed"){
+                    icon = L.icon({
+                        iconUrl: 'https://maps.google.com/mapfiles/ms/icons/green-dot.png',
+                        iconSize: [32, 32]
+                    });
+                } else {
+                    icon = L.icon({
+                        iconUrl: 'https://maps.google.com/mapfiles/ms/icons/red-dot.png',
+                        iconSize: [32, 32]
+                    });
+                }
+
+                let marker = L.marker(
+                    [parseFloat(loc.latitude), parseFloat(loc.longitude)],
+                    { icon: icon }
+                ).addTo(map);
+
+                marker.bindPopup(`
+                    👤 ${loc.assigned_agent || "N/A"} <br>
+                    📍 ${loc.client_name} <br>
+                    📌 ${loc.status}
+                `);
+            }
+
+        });
+
+    });
+}
+
+// 🔥 AUTO REFRESH
+setInterval(loadLocations, 5000);
+
+// 🔥 INITIAL LOAD
+loadLocations();
+
+// 🔥 FILTER CHANGE
+document.getElementById("filter").addEventListener("change", loadLocations);
+
+
+</script>
+
+</body>
+</html>

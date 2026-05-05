@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>View Cases</title>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+</head>
+<body>
+
+<div class="container mt-5">
+
+<h3 class="text-center mb-4">All Cases</h3>
+
+<div class="text-end mb-3">
+    <a href="{{ url_for('export_excel') }}" class="btn btn-success">
+        Download Excel
+    </a>
+</div>
+
+<form method="GET" class="row mb-4">
+
+<div class="col-md-4">
+    <input type="text"
+    name="search"
+    value="{{ search or '' }}"
+    class="form-control"
+    placeholder="Search Client / Ref No">
+</div>
+
+<div class="col-md-3">
+    <select name="status" class="form-select">
+
+        <option value="">All Status</option>
+
+        <option value="Completed" {% if status_filter == 'Completed' %}selected{% endif %}>Completed</option>
+        <option value="Pending" {% if status_filter == 'Pending' %}selected{% endif %}>Pending</option>
+        <option value="In Progress" {% if status_filter == 'In Progress' %}selected{% endif %}>In Progress</option>
+        <option value="Rejected" {% if status_filter == 'Rejected' %}selected{% endif %}>Rejected</option>
+
+    </select>
+</div>
+
+<div class="col-md-2">
+    <button type="submit" class="btn btn-primary w-100">Filter</button>
+</div>
+
+<div class="col-md-3">
+    <a href="{{ url_for('add_case') }}" class="btn btn-success w-100">
+        + Add New Case
+    </a>
+</div>
+
+</form>
+
+<table class="table table-bordered table-striped text-center">
+
+<thead class="table-dark">
+<tr>
+<th>ID</th>
+<th>Case No</th>
+<th>Client Name</th>
+<th>Bank</th>
+<th>Status</th>
+<th>Date</th>
+<th>Time</th>
+<th>Map</th>
+<th>Actions</th>
+</tr>
+</thead>
+
+<tbody>
+
+{% for case in cases %}
+<tr>
+
+<td>{{ case["id"] }}</td>
+<td>{{ case["case_number"] }}</td>
+<td>{{ case["client_name"] }}</td>
+<td>{{ case["bank_name"] }}</td>
+
+<!-- STATUS -->
+<td>
+{% if case["status"] == "Completed" %}
+    <span class="badge bg-success">Completed</span>
+{% elif case["status"] == "Pending" %}
+    <span class="badge bg-warning text-dark">Pending</span>
+{% elif case["status"] == "In Progress" %}
+    <span class="badge bg-primary">In Progress</span>
+{% elif case["status"] == "Rejected" %}
+    <span class="badge bg-danger">Rejected</span>
+{% else %}
+    <span class="badge bg-secondary">{{ case["status"] }}</span>
+{% endif %}
+</td>
+
+<td>{{ case["initiation_date"] }}</td>
+<td>{{ case["created_time"] }}</td>
+
+<!-- 📍 MAP -->
+<td>
+{% if case["map_link"] %}
+<a href="{{ case['map_link'] }}" target="_blank" class="btn btn-sm btn-primary">
+📍 Open Map
+</a>
+{% else %}
+No Map
+{% endif %}
+</td>
+
+<!-- ACTIONS -->
+<td>
+
+<a href="/case_details/{{ case['id'] }}" class="btn btn-sm btn-primary">View</a>
+
+{% if role == "admin" %}
+
+    {% if case["portal_type"] == "MUTHOOT" %}
+        <a href="/edit_muthoot/{{ case['id'] }}" class="btn btn-sm btn-warning">Edit</a>
+    {% else %}
+        <a href="/edit_case/{{ case['id'] }}" class="btn btn-sm btn-warning">Edit</a>
+    {% endif %}
+
+    <a href="/delete_case/{{ case['id'] }}" 
+       class="btn btn-sm btn-danger"
+       onclick="return confirm('Delete?')">
+       Delete
+    </a>
+
+    <a href="{{ url_for('case_summary', id=case['id']) }}" class="btn btn-sm btn-info">
+        AI
+    </a>
+
+    <a href="{{ url_for('download_pdf', id=case['id']) }}" class="btn btn-sm btn-dark">
+        PDF
+    </a>
+
+{% else %}
+    <span class="text-muted">No Access</span>
+{% endif %}
+
+</td>
+
+</tr>
+{% endfor %}
+
+{% if cases|length == 0 %}
+<tr>
+<td colspan="9" class="text-center text-muted">
+No cases found 
+</td>
+</tr>
+{% endif %}
+
+</tbody>
+
+</table>
+
+<div class="text-center mt-4">
+<a href="{{ url_for('dashboard') }}" class="btn btn-secondary">
+Back to Dashboard
+</a>
+</div>
+
+</div>
+
+</body>
+</html>
+
+<style>
+body.dark-mode {
+    background-color: #121212 !important;
+    color: #ffffff !important;
+}
+
+.dark-mode .card {
+    background-color: #1e1e1e;
+    color: #ffffff;
+}
+
+.dark-mode .table {
+    color: #ffffff;
+}
+
+.dark-mode .table thead {
+    background-color: #333 !important;
+}
+
+.dark-mode .navbar {
+    background-color: #1e1e1e !important;
+}
+
+.dark-mode .sidebar {
+    background-color: #000 !important;
+}
+
+.table {
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.table thead {
+    background: #111;
+    color: white;
+}
+
+.table tbody tr:hover {
+    background: #f2f2f2;
+    transition: 0.2s;
+}
+
+/* 🔵 IN PROGRESS - pulse */
+.status-progress {
+    background: #0d6efd;
+    color: white;
+    animation: pulse 1.5s infinite;
+}
+
+/* 🟡 PENDING - blink */
+.status-pending {
+    background: orange;
+    color: white;
+    animation: blink 1s infinite;
+}
+
+/* 🟢 COMPLETED - glow */
+.status-completed {
+    background: green;
+    color: white;
+    box-shadow: 0 0 10px rgba(0,255,0,0.7);
+}
+
+/* 🔴 REJECTED - shake */
+.status-rejected {
+    background: red;
+    color: white;
+    animation: shake 0.5s infinite;
+}
+
+/* 🔥 ANIMATIONS */
+
+@keyframes blink {
+    0% { opacity: 1; }
+    50% { opacity: 0.3; }
+    100% { opacity: 1; }
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.08); }
+    100% { transform: scale(1); }
+}
+
+@keyframes shake {
+    0% { transform: translateX(0); }
+    25% { transform: translateX(-2px); }
+    50% { transform: translateX(2px); }
+    75% { transform: translateX(-2px); }
+    100% { transform: translateX(0); }
+}
+
+<script>
+navigator.geolocation.getCurrentPosition(function(position) {
+    document.getElementById("lat").value = position.coords.latitude;
+    document.getElementById("lng").value = position.coords.longitude;
+});
+</script>
+
+<input type="hidden" name="lat" id="lat">
+<input type="hidden" name="lng" id="lng">
+
+</style>
+
+</div>
+
+</div>
+
+</body>
+</html>
