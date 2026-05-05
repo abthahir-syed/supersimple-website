@@ -1,21 +1,26 @@
-from flask import Flask, render_template, request, redirect, url_for, session, send_file, jsonify, send_from_directory
+from flask import Flask, render_template, request, redirect, url_for, session, send_file
 from werkzeug.security import generate_password_hash, check_password_hash
-from werkzeug.utils import secure_filename
 from openpyxl import Workbook
-from PIL import Image, ImageDraw, ImageFont
-from datetime import datetime, timedelta, date
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
-from reportlab.lib.styles import getSampleStyleSheet
+from flask import jsonify
+from werkzeug.utils import secure_filename
+from PIL import Image,ImageDraw,ImageFont
+from datetime import datetime, timedelta
+from flask import send_from_directory
 import pandas as pd
 import sqlite3
 import tempfile
 import math
 import matplotlib.pyplot as plt
+import threading
+import time
 import io
 import os
 import random
 import base64
-import time
+from datetime import datetime
+from datetime import date
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
+from reportlab.lib.styles import getSampleStyleSheet
 
 TARGET_PER_DAY = 20
 print(os.listdir("templates"))

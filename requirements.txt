@@ -3,3 +3,5 @@ gunicorn
 pandas
 openpyxl
 pillow
+matplotlib
+reportlab
