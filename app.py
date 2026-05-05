@@ -1,6 +1,5 @@
 from flask import Flask, render_template, request, redirect, url_for, session, send_file
 from werkzeug.security import generate_password_hash, check_password_hash
-from flask_socketio import SocketIO
 from openpyxl import Workbook
 from flask import jsonify
 from werkzeug.utils import secure_filename
@@ -29,7 +28,6 @@ print(os.listdir("templates"))
 app = Flask(__name__)
 app.secret_key = "cpv_secret_key"
 
-socketio = SocketIO(app)
 
 db_path = "cpv_database.db"
 
@@ -474,28 +472,6 @@ def generate_case_number(client):
 
     # 🔥 Final Case Number (Professional format)
     return f"{prefix}-{new_id:05d}-{rand}"
-
-def send_live_update():
-
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-
-    cursor.execute("SELECT COUNT(*) FROM cases")
-    total = cursor.fetchone()[0] or 0
-
-    cursor.execute("SELECT COUNT(*) FROM cases WHERE status='Completed'")
-    completed = cursor.fetchone()[0] or 0
-
-    cursor.execute("SELECT COUNT(*) FROM cases WHERE status='Pending'")
-    pending = cursor.fetchone()[0] or 0
-
-    conn.close()
-
-    socketio.emit('update_dashboard', {
-        "total": total,
-        "completed": completed,
-        "pending": pending
-    })
 
 @app.route('/uploads/<filename>')
 def uploaded_file(filename):
@@ -1181,9 +1157,7 @@ def add_case():
 
                 conn.commit()
 
-            # 🔄 LIVE UPDATE
-            send_live_update()
-
+            
             # 🔁 REDIRECT
             if portal_type == "MUTHOOT":
                 return redirect(url_for("muthoot_cases"))
@@ -2036,9 +2010,6 @@ def submit_muthoot(case_id):
 
             conn.commit()
 
-        # 🔄 LIVE UPDATE
-        send_live_update()
-
         return redirect(url_for("muthoot_cases"))
 
     except Exception as e:
@@ -2080,7 +2051,6 @@ def edit_case(id):
         ))
 
         conn.commit()
-        send_live_update()
         conn.close()
 
         return redirect(url_for("view_case"))
@@ -2279,12 +2249,13 @@ def logout():
 
 if __name__ == "__main__":
 
-    # ✅ 1. INIT DB FIRST (VERY IMPORTANT)
+    # ✅ INIT DB
     init_db()
 
-    # ✅ 2. AUTO REASSIGN FUNCTION
+    # ✅ AUTO REASSIGN THREAD
     def run_auto_reassign():
-        time.sleep(5)  # 🔥 wait DB ready
+        import time
+        time.sleep(5)
 
         while True:
             try:
@@ -2292,14 +2263,13 @@ if __name__ == "__main__":
             except Exception as e:
                 print("Auto Reassign Error:", e)
 
-            time.sleep(60)  # every 1 min
+            time.sleep(60)
 
-    # ✅ 3. START THREAD AFTER DB READY
+    import threading
     threading.Thread(target=run_auto_reassign, daemon=True).start()
 
-    # ✅ 4. RUN SERVER (NO DOUBLE RUN)
-    socketio.run(app, debug=True, port=5000)
-
+    # ✅ IMPORTANT CHANGE
+    app.run(host="0.0.0.0", port=5000)
 
    
    
