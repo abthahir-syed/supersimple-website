@@ -2,5 +2,4 @@ Flask
 gunicorn
 pandas
 openpyxl
-flask_socketio
 pillow
