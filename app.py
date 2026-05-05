@@ -28,7 +28,6 @@ print(os.listdir("templates"))
 app = Flask(__name__)
 app.secret_key = "cpv_secret_key"
 
-
 db_path = "cpv_database.db"
 
 sqlite3.connect(db_path, timeout=20, check_same_thread=False)
@@ -1157,7 +1156,6 @@ def add_case():
 
                 conn.commit()
 
-            
             # 🔁 REDIRECT
             if portal_type == "MUTHOOT":
                 return redirect(url_for("muthoot_cases"))
@@ -2248,24 +2246,6 @@ def logout():
 
 
 if __name__ == "__main__":
-
-    # ✅ INIT DB
-    init_db()
-
-    # ✅ AUTO REASSIGN THREAD
-    def run_auto_reassign():
-        import time
-        time.sleep(5)
-
-        while True:
-            try:
-                auto_reassign_cases()
-            except Exception as e:
-                print("Auto Reassign Error:", e)
-
-            time.sleep(60)
-
-    # ✅ IMPORTANT CHANGE
     app.run(host="0.0.0.0", port=5000)
 
    
