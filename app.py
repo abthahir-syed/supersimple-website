@@ -1,24 +1,23 @@
-from flask import Flask, render_template, request, redirect, url_for, session, send_file
+from flask import Flask, render_template, request, redirect, url_for, session, send_file, jsonify, send_from_directory
 from werkzeug.security import generate_password_hash, check_password_hash
-from openpyxl import Workbook
-from flask import jsonify
 from werkzeug.utils import secure_filename
-from PIL import Image,ImageDraw,ImageFont
-from datetime import datetime, timedelta
-from flask import send_from_directory
+from openpyxl import Workbook
+from PIL import Image, ImageDraw, ImageFont
+from datetime import datetime, timedelta, date
+
 import pandas as pd
 import sqlite3
 import tempfile
 import math
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
-import threading
 import time
 import io
 import os
 import random
 import base64
-from datetime import datetime
-from datetime import date
+
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
 from reportlab.lib.styles import getSampleStyleSheet
 
